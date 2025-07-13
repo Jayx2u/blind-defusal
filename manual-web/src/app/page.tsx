@@ -296,6 +296,10 @@ export default function Home() {
           <h2 className="text-3xl font-bold border-b-4 border-gray-700 pb-2 mb-4">
             Module: Big Ass Button
           </h2>
+          <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4" role="alert">
+              <p className="font-bold">This module can only be disarmed when all other modules (except needy ones) have been disarmed.</p>
+              <p>Failure to adhere to this rule will result in detonation.</p>
+            </div>
           <div className="space-y-4">
             <p>
               This module features a single, large button which contains an LED that can be lit. The button has no text on it. To disarm it, the button may need to be pressed and held. The timing of the release is critical and depends on whether the LED is lit and other bomb features.
