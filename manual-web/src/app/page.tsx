@@ -311,7 +311,7 @@ export default function Home() {
               </ul>
               <div className="p-4 border-t-2 border-gray-200">
                 <h3 className="text-xl font-bold">Releasing a Held Button:</h3>
-                <p>If you are holding the button, a colored LED will light up on the right side of the module. Release the button when the countdown timer has a specific digit in any position, according to the color of the LED:</p>
+                <p>If you are holding the button, the display located at the centre of the bomb will light up. Release the button when the countdown timer has a specific digit in any position, according to the color of the big display:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1">
                   <li><span className="font-bold text-blue-600">Blue:</span> Release when timer has a <span className="font-bold">4</span>.</li>
                   <li><span className="font-bold text-yellow-500">Yellow:</span> Release when timer has a <span className="font-bold">5</span>.</li>
