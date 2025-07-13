@@ -101,19 +101,12 @@ export default function Home() {
           <div className="space-y-4">
             <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4" role="alert">
               <p className="font-bold">This is a needy module that requires constant supervision.</p>
-              <p>It is sensitive to movement and will check its orientation at random intervals.</p>
+              <p>It is sensitive to sudden movement.</p>
             </div>
             <p>
-              The Operator must keep the device oriented correctly to prevent a strike. The required orientation is determined by the color of the LED on the module.
+              The Operator must keep the device as still as possible. Movement is allowed, however the tolerance of movement is unknown.
             </p>
             <div className="p-4 border-2 border-gray-400 rounded-lg bg-white">
-              <h3 className="text-xl font-bold mb-2">Orientation Instructions:</h3>
-              <ul className="list-disc list-inside space-y-1">
-                <li><span className="font-bold">Green LED:</span> Keep the device perfectly level (screen facing up).</li>
-                <li><span className="font-bold">Red LED:</span> Tilt the device 45 degrees forward.</li>
-                <li><span className="font-bold">Blue LED:</span> Hold the device vertically (on its side).</li>
-                <li><span className="font-bold">Yellow LED:</span> Keep the device upside down.</li>
-              </ul>
               <p className="mt-4 text-sm text-red-700 font-bold">
                 Warning: Any sudden movements or incorrect orientations will result in a strike. The module is disarmed once all other modules are solved.
               </p>
