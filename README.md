@@ -1,1 +1,3 @@
+![Banner](https://github.com/Jayx2u/blind-defusal/blob/main/assets/blind-defusal-banner.png?raw=true)
 # Blind Defusal
+This is a two-player, cooperative "bomb defusal" game. One player is the "Operator" who has the physical device, and the other is the "Expert" who has the instruction manual but cannot see the device. Their goal is to disarm all the modules on the device before the timer runs out.
