@@ -55,7 +55,7 @@ export default function Home() {
               A bomb will have one or more modules that must be disarmed. Each module is self-contained and can be disarmed in any order. Instructions for each module are below.
             </p>
             <p>
-              Some disarming instructions will require information from the bomb itself, such as the serial number or batteries. This information can be found on the sides of the bomb casing.
+              Some disarming instructions will require information from the bomb itself, such as the serial number or batteries. This information can be found on the bottom of the bomb casing.
             </p>
             <div className="p-4 border-2 border-gray-400 rounded-lg bg-white">
               <h3 className="text-xl font-bold mb-2">Timer and Strikes</h3>
@@ -101,16 +101,11 @@ export default function Home() {
           <div className="space-y-4">
             <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4" role="alert">
               <p className="font-bold">This is a needy module that requires constant supervision.</p>
-              <p>It is sensitive to sudden movement.</p>
+              <p>It is sensitive to sudden movement. Any sudden movements or incorrect orientations will result in a strike. The module is disarmed once all other modules are solved.</p>
             </div>
             <p>
               The Operator must keep the device as still as possible. Movement is allowed, however the tolerance of movement is unknown.
             </p>
-            <div className="p-4 border-2 border-gray-400 rounded-lg bg-white">
-              <p className="mt-4 text-sm text-red-700 font-bold">
-                Warning: Any sudden movements or incorrect orientations will result in a strike. The module is disarmed once all other modules are solved.
-              </p>
-            </div>
           </div>
         </section>
 
