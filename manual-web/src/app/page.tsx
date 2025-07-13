@@ -1,8 +1,17 @@
-// import Image from "next/image";
+import Image from "next/image";
 
 export default function Home() {
   return (
     <div className="container mx-auto p-4 sm:p-8 font-mono bg-gray-100 text-gray-800">
+      <div className="flex justify-center my-4">
+        <Image
+            src="/blind-defusal-logo.svg"
+            alt="Blind Defusal Logo"
+            width={350}
+            height={350}
+            priority
+          />
+      </div>
       <header className="text-center my-8">
         <h1 className="text-5xl font-bold text-red-600 tracking-wider">
           BOMB DEFUSAL MANUAL
@@ -90,8 +99,12 @@ export default function Home() {
             Needy Module: Gyro-Stabilizer
           </h2>
           <div className="space-y-4">
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4" role="alert">
+              <p className="font-bold">This is a needy module that requires constant supervision.</p>
+              <p>It is sensitive to movement and will check its orientation at random intervals.</p>
+            </div>
             <p>
-              This is a <span className="font-bold">needy module</span> that requires constant supervision. It is sensitive to movement and will check its orientation at random intervals. The Operator must keep the device oriented correctly to prevent a strike. The required orientation is determined by the color of the LED on the module.
+              The Operator must keep the device oriented correctly to prevent a strike. The required orientation is determined by the color of the LED on the module.
             </p>
             <div className="p-4 border-2 border-gray-400 rounded-lg bg-white">
               <h3 className="text-xl font-bold mb-2">Orientation Instructions:</h3>
@@ -172,6 +185,62 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Morse Code Module Section */}
+        <section id="morse-code">
+          <h2 className="text-3xl font-bold border-b-4 border-gray-700 pb-2 mb-4">
+            Module: Morse Code
+          </h2>
+          <div className="space-y-4">
+            <p>
+              This module has a flashing LED, a sliding potentiometer, and a transmit button. The LED flashes a single word from the list below in Morse code. The Operator must interpret the code, and the Expert must provide the correct frequency to set with the potentiometer.
+            </p>
+            <div className="p-4 border-2 border-gray-400 rounded-lg bg-white space-y-6">
+              <div>
+                <h3 className="text-xl font-bold mb-2">Instructions:</h3>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Operator identifies the word being flashed by the LED using the Morse code chart.</li>
+                  <li>Expert finds the word in the frequency table to get the correct frequency.</li>
+                  <li>Operator adjusts the sliding potentiometer to the specified frequency.</li>
+                  <li>Operator presses the transmit button to disarm the module.</li>
+                </ol>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2">Frequency Table:</h3>
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr>
+                      <th className="border-b-2 border-gray-300 p-2">Word</th>
+                      <th className="border-b-2 border-gray-300 p-2">Frequency</th>
+                      <th className="border-b-2 border-gray-300 p-2">Word</th>
+                      <th className="border-b-2 border-gray-300 p-2">Frequency</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-b border-gray-200"><td className="p-2">shell</td><td className="p-2">3.505 MHz</td><td className="p-2">flick</td><td className="p-2">3.555 MHz</td></tr>
+                    <tr className="border-b border-gray-200"><td className="p-2">halls</td><td className="p-2">3.515 MHz</td><td className="p-2">bombs</td><td className="p-2">3.565 MHz</td></tr>
+                    <tr className="border-b border-gray-200"><td className="p-2">slick</td><td className="p-2">3.522 MHz</td><td className="p-2">break</td><td className="p-2">3.572 MHz</td></tr>
+                    <tr className="border-b border-gray-200"><td className="p-2">trick</td><td className="p-2">3.532 MHz</td><td className="p-2">brick</td><td className="p-2">3.575 MHz</td></tr>
+                    <tr className="border-b border-gray-200"><td className="p-2">boxes</td><td className="p-2">3.535 MHz</td><td className="p-2">steak</td><td className="p-2">3.582 MHz</td></tr>
+                    <tr className="border-b border-gray-200"><td className="p-2">leaks</td><td className="p-2">3.542 MHz</td><td className="p-2">sting</td><td className="p-2">3.592 MHz</td></tr>
+                    <tr className="border-b border-gray-200"><td className="p-2">strobe</td><td className="p-2">3.545 MHz</td><td className="p-2">vector</td><td className="p-2">3.595 MHz</td></tr>
+                    <tr><td className="p-2">bistro</td><td className="p-2">3.552 MHz</td><td className="p-2">beats</td><td className="p-2">3.600 MHz</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div>
+                <h3 className="text-xl font-bold mb-2">International Morse Code Chart:</h3>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-x-4 gap-y-1 text-sm">
+                  <span>A: .-</span><span>B: -...</span><span>C: -.-.</span><span>D: -..</span><span>E: .</span><span>F: ..-.</span>
+                  <span>G: --.</span><span>H: ....</span><span>I: ..</span><span>J: .---</span><span>K: -.-</span><span>L: .-..</span>
+                  <span>M: --</span><span>N: -.</span><span>O: ---</span><span>P: .--.</span><span>Q: --.-</span><span>R: .-.</span>
+                  <span>S: ...</span><span>T: -</span><span>U: ..-</span><span>V: ...-</span><span>W: .--</span><span>X: -..-</span>
+                  <span>Y: -.--</span><span>Z: --..</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Wire Pulling Module Section */}
         <section id="wire-pulling">
           <h2 className="text-3xl font-bold border-b-4 border-gray-700 pb-2 mb-4">
@@ -223,8 +292,6 @@ export default function Home() {
         </section>
 
       </main>
-
-
 
       <footer className="text-center mt-12 py-4 border-t-2 border-gray-300">
         <p className="text-sm text-gray-600">

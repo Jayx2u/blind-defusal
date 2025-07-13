@@ -27,6 +27,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <link rel="icon" href="/blind-defusal-favicon.svg" sizes="any" />
         {children}
       </body>
     </html>
