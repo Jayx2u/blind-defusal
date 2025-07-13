@@ -4,4 +4,4 @@ This is a two-player, cooperative "bomb defusal" game. One player is the "Operat
 
 <hr>
 
-Made with ❤️ by [@ConfusedHello](https://github.com/confusedhello), [@Jayx2u](https://github.com/Jayx2u/) and [@pi-nf](https://github.com/pi-nf) during [Undercity 2025 @ Github HQ](https://highway.hackclub.com/getting-started/undercity). :)
+Made with ❤️ by [@ConfusedHello](https://github.com/confusedhello), [@Jayx2u](https://github.com/Jayx2u/) and [@pi-nf](https://github.com/pi-nf) during [Undercity 2025 @ Github HQ](https://highway.hackclub.com/getting-started/undercity).
