@@ -1,0 +1,177 @@
+import time
+import board
+import neopixel
+import audiocore
+import audiobusio, displayio, busio
+
+from analogio import AnalogIn
+from fourwire import FourWire
+from digitalio import DigitalInOut, Direction, Pull
+
+from TM1637 import TM1637
+from adafruit_st7789 import ST7789
+from adafruit_adxl34x import ADXL345
+
+
+# ---------------- GPIO pins ----------------
+DISPLAY2_SCK_PIN = board.GP2
+DISPLAY2_MOSI_PIN = board.GP3
+DISPLAY2_MISO_PIN = board.GP4
+DISPLAY2_CS_PIN = board.GP5
+DISPLAY2_RST_PIN = board.GP6
+DISPLAY2_DC_PIN = board.GP7
+
+BIG_BUTTON_PIN = board.GP8
+POTENTIOMETER_BUTTON_PIN = board.GP9
+
+ACCELEROMETER_SDA_PIN = board.GP12
+ACCELEROMETER_SCL_PIN = board.GP13
+
+NEOPIXEL_PIN = board.GP15
+
+AUDIO_SCK_PIN = board.GP16
+AUDIO_WS_PIN = board.GP17
+AUDIO_SD_PIN = board.GP18
+
+SEQUENCER_BUTTON_PINS = [board.GP19, board.GP20, board.GP21, board.GP22]
+
+DISPLAY1_DIO_PIN = board.GP26
+DISPLAY1_CLK_PIN = board.GP27
+
+POTENTIOMETER_PIN = board.GP28
+
+
+# ---------------- Helper Classes ----------------
+class Potentiometer:
+    def __init__(self, pin):
+        self.adc = AnalogIn(pin)
+        self.choices = [3505, 3515, 3522, 3532, 3535, 3542, 3545, 3552, 3555, 3565, 3572, 3575, 3582, 3592, 3595, 3600]
+
+    @property
+    def value(self):
+        return 3600 - 0.95 * self.adc.value / 65535 * 100
+
+    @property
+    def snapped_value(self):
+        return min(self.choices, key=lambda x: abs(x - self.value))
+
+
+# ---------------- Peripherals ----------------
+
+# Timer display
+display1 = TM1637(DISPLAY1_CLK_PIN, DISPLAY1_DIO_PIN)
+
+# Audio output
+audio_out = audiobusio.I2SOut(AUDIO_SCK_PIN, AUDIO_WS_PIN, AUDIO_SD_PIN)
+
+# Accelerometer
+accel_i2c = busio.I2C(
+    ACCELEROMETER_SCL_PIN,
+    ACCELEROMETER_SDA_PIN,
+    frequency=400_000
+)
+accelerometer = ADXL345(accel_i2c)
+
+# Potentiometer
+potentiometer = Potentiometer(POTENTIOMETER_PIN)
+
+# Buttons
+big_button = DigitalInOut(BIG_BUTTON_PIN)
+big_button.direction = Direction.INPUT
+big_button.pull = Pull.UP
+
+potentiometer_button = DigitalInOut(POTENTIOMETER_BUTTON_PIN)
+potentiometer_button.direction = Direction.INPUT
+potentiometer_button.pull = Pull.UP
+
+sequence_button1 = DigitalInOut(SEQUENCER_BUTTON_PINS[0])
+sequence_button1.direction = Direction.INPUT
+sequence_button1.pull = Pull.UP
+
+sequence_button2 = DigitalInOut(SEQUENCER_BUTTON_PINS[1])
+sequence_button2.direction = Direction.INPUT
+sequence_button2.pull = Pull.UP
+
+sequence_button3 = DigitalInOut(SEQUENCER_BUTTON_PINS[2])
+sequence_button3.direction = Direction.INPUT
+sequence_button3.pull = Pull.UP
+
+sequence_button4 = DigitalInOut(SEQUENCER_BUTTON_PINS[3])
+sequence_button4.direction = Direction.INPUT
+sequence_button4.pull = Pull.UP
+
+# Neopixels
+neopixels = neopixel.NeoPixel(NEOPIXEL_PIN, 6, brightness=2)
+
+# TFT Display
+displayio.release_displays()
+
+spi = busio.SPI(
+    clock=DISPLAY2_SCK_PIN,
+    MOSI=DISPLAY2_MOSI_PIN
+)
+
+while not spi.try_lock():
+    pass
+
+spi.configure(baudrate=24_000_000)
+spi.unlock()
+
+display_bus = FourWire(spi,
+    command=DISPLAY2_DC_PIN,
+    chip_select=DISPLAY2_CS_PIN,
+    reset=DISPLAY2_RST_PIN
+)
+
+display2 = ST7789(display_bus,
+    width=240, height=320,
+    rowstart=0, colstart=0,
+    bgr=True, invert=False
+)
+
+screen = displayio.Group()
+display2.root_group = screen
+
+
+# ---------------- Other Config ----------------
+countdown_time = 300
+
+COLORS = {
+    "RED": (255, 0, 0),
+    "YELLOW": (255, 255, 0),
+    "GREEN": (0, 255, 0),
+    "CYAN": (0, 255, 255),
+    "BLUE": (0, 0, 255),
+    "PURPLE": (180, 0, 255),
+    "WHITE": (255, 255, 255),
+    "OFF": (0, 0, 0)
+}
+
+tick_sound = audiocore.WaveFile(open("/assets/tick.wav", "rb"))
+
+last_second_tick = 0.0
+last_accel_update = 0.0
+
+
+# ---------------- Main Loop ----------------
+while True:
+    now = time.monotonic()
+
+    # Other logic here - accelerometer updates, button presses, etc.
+
+    # Update timer display every second and play tick sound
+    if countdown_time > 0 and (now - last_second_tick) >= 1.0:
+        minutes, seconds = divmod(countdown_time, 60)
+        display1.numbers(minutes, seconds, countdown_time % 2 == 0)
+
+        audio_out.play(tick_sound)
+
+        # Wait for the sound to finish
+        while audio_out.playing:
+            pass
+
+        countdown_time -= 1
+        last_second_tick = now
+
+    elif countdown_time == 0:
+        break
