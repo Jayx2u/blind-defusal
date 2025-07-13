@@ -291,6 +291,45 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Big Ass Button Module Section */}
+        <section id="big-ass-button">
+          <h2 className="text-3xl font-bold border-b-4 border-gray-700 pb-2 mb-4">
+            Module: Big Ass Button
+          </h2>
+          <div className="space-y-4">
+            <p>
+              This module features a single, large button which contains an LED that can be lit. The button has no text on it. To disarm it, the button may need to be pressed and held. The timing of the release is critical and depends on whether the LED is lit and other bomb features.
+            </p>
+            <div className="p-4 border-2 border-gray-400 rounded-lg bg-white space-y-4">
+              <h3 className="text-xl font-bold">Button Instructions:</h3>
+              <p>Follow these rules in order. Perform the first action that applies based on the button&apos;s properties.</p>
+              <ul className="list-disc list-inside space-y-2">
+                <li>
+                  If the LED is lit and there are more than 2 batteries, press and immediately release the button.
+                </li>
+                <li>
+                  If the LED is off and there is more than 1 battery, hold the button. Refer to the &quot;Releasing a Held Button&quot; section.
+                </li>
+                <li>
+                  If the LED is lit and the serial number contains a vowel, press and immediately release the button.
+                </li>
+                <li>
+                  Otherwise, hold the button and refer to the &quot;Releasing a Held Button&quot; section.
+                </li>
+              </ul>
+              <div className="p-4 border-t-2 border-gray-200">
+                <h3 className="text-xl font-bold">Releasing a Held Button:</h3>
+                <p>If you are holding the button, a colored LED will light up on the right side of the module. Release the button when the countdown timer has a specific digit in any position, according to the color of the LED:</p>
+                <ul className="list-disc list-inside mt-2 space-y-1">
+                  <li><span className="font-bold text-blue-600">Blue:</span> Release when timer has a <span className="font-bold">4</span>.</li>
+                  <li><span className="font-bold text-yellow-500">Yellow:</span> Release when timer has a <span className="font-bold">5</span>.</li>
+                  <li><span className="font-bold">Any other color:</span> Release when timer has a <span className="font-bold">1</span>.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
       </main>
 
       <footer className="text-center mt-12 py-4 border-t-2 border-gray-300">
