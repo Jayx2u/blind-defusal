@@ -13,6 +13,9 @@ from adafruit_st7789 import ST7789
 from adafruit_adxl34x import ADXL345
 
 
+# ---------------- Game Setup ----------------
+countdown_time = 180
+
 # ---------------- GPIO pins ----------------
 DISPLAY2_SCK_PIN = board.GP2
 DISPLAY2_MOSI_PIN = board.GP3
@@ -134,7 +137,8 @@ display2.root_group = screen
 
 
 # ---------------- Other Config ----------------
-countdown_time = 300
+Alive = True
+Completed = [0, 0, 0, 0, 0]  # Tracks completion of each sequence
 
 COLORS = {
     "RED": (255, 0, 0),
@@ -148,13 +152,22 @@ COLORS = {
 }
 
 tick_sound = audiocore.WaveFile(open("/assets/tick.wav", "rb"))
+explosion_sound = audiocore.WaveFile(open("/assets/explosion.wav", "rb"))
+
+color_sequences = [
+    ["RED", "BLUE", "GREEN", "YELLOW"],
+    ["YELLOW", "RED", "BLUE", "GREEN"],
+    ["BLUE", "GREEN", "YELLOW", "RED"],
+    ["GREEN", "YELLOW", "RED", "BLUE"],
+    ["RED", "RED", "BLUE", "YELLOW"]
+]
 
 last_second_tick = 0.0
 last_accel_update = 0.0
 
 
 # ---------------- Main Loop ----------------
-while True:
+while Alive:
     now = time.monotonic()
 
     # Other logic here - accelerometer updates, button presses, etc.
@@ -173,5 +186,12 @@ while True:
         countdown_time -= 1
         last_second_tick = now
 
-    elif countdown_time == 0:
-        break
+    elif countdown_time == 0 and (now - last_second_tick) >= 1.0:
+        Alive = False
+
+
+display1.numbers(00000, False)
+audio_out.play(explosion_sound)
+
+while audio_out.playing:
+    pass
