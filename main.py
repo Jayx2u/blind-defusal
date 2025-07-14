@@ -183,7 +183,7 @@ display2.root_group = screen
 # ---------------- Other Config ----------------
 Alive = True
 Completed = [0, 0, 0, 0, 0]  # Tracks completion of each sequence
-Debug = False
+Debug = True
 
 # --- IDENTIFICATION: Serial Number ---
 possible_serial_numbers = ["SN48K2", "FRQ1A3"]
@@ -256,7 +256,7 @@ morse_last_time = 0.0
 morse_time_unit = 0.25 # seconds for one dot
 
 # Power Sequencer Module State
-sequencer_state = "STARTING"  # STARTING, SHOW_SEQUENCE, AWAIT_INPUT, SOLVED
+sequencer_state = "IDLE"  # IDLE, STARTING, SHOW_SEQUENCE, AWAIT_INPUT, SOLVED
 sequencer_sequence = []
 sequencer_correct_presses = []
 sequencer_user_presses = []
@@ -418,7 +418,7 @@ else:
 display2.root_group = screen
 
 # Reset Neopixels
-neopixels[0] = COLORS["OFF"]
+neopixels[1] = COLORS["OFF"]
 
 # ---------------- Main Loop ----------------
 while Alive:
@@ -448,7 +448,7 @@ while Alive:
         print(f"Submitted: {selected_freq / 1000.0} MHz")
         if selected_freq == morse_correct_frequency:
             morse_state = "SOLVED"
-            neopixels[0] = COLORS["GREEN"]
+            neopixels[1] = COLORS["GREEN"]
             print("Correct! Module solved.")
         else:
             strikes += 1
@@ -458,9 +458,9 @@ while Alive:
     # Morse code state machine
     if morse_state not in ["IDLE", "SOLVED"]:
         if morse_state == "START_SEQUENCE":
-            neopixels[0] = COLORS["BLUE"]
+            neopixels[1] = COLORS["BLUE"]
             if (now - morse_last_time) >= 1.0:
-                neopixels[0] = COLORS["OFF"]
+                neopixels[1] = COLORS["OFF"]
                 morse_state = "LETTER_GAP"
                 morse_last_time = now
 
@@ -497,26 +497,33 @@ while Alive:
             morse_last_time = now
 
         elif morse_state == "DOT":
-            neopixels[0] = COLORS["WHITE"]
+            neopixels[1] = COLORS["WHITE"]
             if (now - morse_last_time) >= morse_time_unit:
-                neopixels[0] = COLORS["OFF"]
+                neopixels[1] = COLORS["OFF"]
                 morse_state = "SIGNAL_GAP"
                 morse_last_time = now
 
         elif morse_state == "DASH":
-            neopixels[0] = COLORS["WHITE"]
+            neopixels[1] = COLORS["WHITE"]
             if (now - morse_last_time) >= (3 * morse_time_unit):
-                neopixels[0] = COLORS["OFF"]
+                neopixels[1] = COLORS["OFF"]
                 morse_state = "SIGNAL_GAP"
                 morse_last_time = now
 
     # --- MODULE: Power Sequencer ---
-    # The LED at neopixels[1] will flash a sequence of colors.
+    # The LED at neopixels[0] will flash a sequence of colors.
     # The user must press the correct buttons based on the sequence and serial number.
 
     if sequencer_state != "SOLVED":
+            # State: IDLE -> Wait for the user to start the sequence
+            if sequencer_state == "IDLE":
+                if not sequence_button1.value:
+                    print("Sequencer started by user.")
+                    sequencer_state = "STARTING"
+                    time.sleep(0.2)  # Debounce
+
             # State: STARTING -> Initialize the module
-            if sequencer_state == "STARTING":
+            elif sequencer_state == "STARTING":
                 # Randomly choose one of the 5 sequences
                 chosen_color_sequence = random.choice(color_sequences)
                 sequencer_sequence = ["WHITE"] + chosen_color_sequence  # Prepend WHITE for start signal
@@ -537,21 +544,20 @@ while Alive:
                 sequencer_state = "SHOW_SEQUENCE"
                 sequencer_last_flash_time = now
 
-            # State: SHOW_SEQUENCE -> Flash the colors
+            # State: SHOW_SEQUENCE -> Flash the colors in a loop
             elif sequencer_state == "SHOW_SEQUENCE":
                 if (now - sequencer_last_flash_time) >= sequencer_flash_interval:
                     if sequencer_color_index < len(sequencer_sequence):
                         color_name = sequencer_sequence[sequencer_color_index]
-                        neopixels[1] = COLORS[color_name]
+                        neopixels[0] = COLORS[color_name]
                         sequencer_color_index += 1
                     else:
-                        # Sequence finished, turn off LED and wait for input
-                        neopixels[1] = COLORS["OFF"]
-                        sequencer_state = "AWAIT_INPUT"
+                        # Sequence finished, loop back to the start after a pause
+                        neopixels[0] = COLORS["OFF"]
+                        sequencer_color_index = 0
                     sequencer_last_flash_time = now
 
-            # State: AWAIT_INPUT -> Check for button presses
-            elif sequencer_state == "AWAIT_INPUT":
+                # Check for button presses while the sequence is showing
                 buttons = [sequence_button1, sequence_button2, sequence_button3, sequence_button4]
                 for i, button in enumerate(buttons):
                     if not button.value:
@@ -563,15 +569,13 @@ while Alive:
                         if sequencer_user_presses != sequencer_correct_presses[:len(sequencer_user_presses)]:
                             print("Incorrect sequence!")
                             strikes += 1
-                            sequencer_user_presses = []  # Reset
-                            sequencer_color_index = 0  # Replay sequence
-                            sequencer_state = "SHOW_SEQUENCE"
+                            sequencer_user_presses = []  # Reset on incorrect press
 
                         # Check for completion
                         elif len(sequencer_user_presses) == len(sequencer_correct_presses):
                             print("Correct! Sequencer solved.")
                             sequencer_state = "SOLVED"
-                            neopixels[1] = COLORS["GREEN"]
+                            neopixels[0] = COLORS["GREEN"]
 
                         time.sleep(0.2)  # Debounce
                         break  # Process one button at a time
