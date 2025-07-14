@@ -22,6 +22,8 @@ countdown_time = 180
 strikes = 0
 
 # ---------------- GPIO pins ----------------
+
+# Display
 DISPLAY2_SCK_PIN = board.GP2
 DISPLAY2_MOSI_PIN = board.GP3
 DISPLAY2_MISO_PIN = board.GP4
@@ -29,22 +31,28 @@ DISPLAY2_CS_PIN = board.GP5
 DISPLAY2_RST_PIN = board.GP6
 DISPLAY2_DC_PIN = board.GP7
 
+DISPLAY1_DIO_PIN = board.GP26
+DISPLAY1_CLK_PIN = board.GP27
+
+# BAB Module
 BIG_BUTTON_PIN = board.GP8
 
+# Gyro Needy Module
 ACCELEROMETER_SDA_PIN = board.GP12
 ACCELEROMETER_SCL_PIN = board.GP13
 
+# RBG LEDs
 NEOPIXEL_PIN = board.GP15
 
+# Speakers
 AUDIO_SCK_PIN = board.GP16
 AUDIO_WS_PIN = board.GP17
 AUDIO_SD_PIN = board.GP18
 
+# Power Sequencer Module
 SEQUENCER_BUTTON_PINS = [board.GP19, board.GP20, board.GP21, board.GP22]
 
-DISPLAY1_DIO_PIN = board.GP26
-DISPLAY1_CLK_PIN = board.GP27
-
+# Morse Code Module
 POTENTIOMETER_PIN = board.GP28
 TRANSMIT_BUTTON_PIN = board.GP10
 
@@ -164,7 +172,7 @@ display2.root_group = screen
 # ---------------- Other Config ----------------
 Alive = True
 Completed = [0, 0, 0, 0, 0]  # Tracks completion of each sequence
-Debug = False
+Debug = True
 
 # Serial Number Generation
 possible_serial_numbers = ["SN48K2", "FRQ1A3"]
@@ -172,46 +180,12 @@ serial_number = random.choice(possible_serial_numbers)
 chosen_serial_index = possible_serial_numbers.index(serial_number)
 print(f"Serial Number: {serial_number}")
 
-# Display and logging settings
-pot_check_interval = 0.2  # seconds
-last_pot_check_time = 0.0
-pot_text_label = None
-
-if Debug:
-    # In debug mode, the screen shows all print() statements
-    screen = displayio.CIRCUITPYTHON_TERMINAL
-else:
-    # In normal mode, show serial and pot frequency
-    screen = displayio.Group()
-
-    # Serial Number Label
-    serial_display_text = f"Serial {chosen_serial_index + 1}"
-    serial_label = label.Label(
-        terminalio.FONT,
-        text=serial_display_text,
-        color=0xFFFFFF,
-        scale=3,
-        anchor_point=(0.5, 0.0),
-        anchored_position=(display2.width // 2, 10)
-    )
-    screen.append(serial_label)
-
-    # Potentiometer Frequency Label
-    pot_text_label = label.Label(
-        terminalio.FONT,
-        text="",
-        color=0xFFFF00,
-        scale=3,
-        anchor_point=(0.5, 1.0),
-        anchored_position=(display2.width // 2, display2.height - 10)
-    )
-    screen.append(pot_text_label)
-
-display2.root_group = screen
-
 # Sounds
 tick_sound = audiocore.WaveFile(open("/assets/tick.wav", "rb"))
 explosion_sound = audiocore.WaveFile(open("/assets/explosion.wav", "rb"))
+
+# Wire Pulling Module
+WIRE_PULLING_PINS = [board.GP9, board.GP11, board.GP14, board.GP23, board.GP24, board.GP25]
 
 COLORS = {
     "RED": (255, 0, 0),
@@ -221,6 +195,7 @@ COLORS = {
     "BLUE": (0, 0, 255),
     "PURPLE": (180, 0, 255),
     "WHITE": (255, 255, 255),
+    "BLACK": (1, 1, 1),  # Using a very dim white for "black"
     "OFF": (0, 0, 0)
 }
 
@@ -273,6 +248,107 @@ sequencer_user_presses = []
 sequencer_color_index = 0
 sequencer_last_flash_time = 0.0
 sequencer_flash_interval = 0.75 # seconds
+
+# Wire Pulling Buttons
+wire_buttons = []
+for pin in WIRE_PULLING_PINS:
+    button = DigitalInOut(pin)
+    button.direction = Direction.INPUT
+    button.pull = Pull.UP
+    wire_buttons.append(button)
+
+# Wire Pulling Module State
+wire_pulling_state = "STARTING" # STARTING, AWAIT_INPUT, SOLVED, FAILED
+wire_pulling_wires = []
+wire_pulling_correct_wire_index = -1 # 0-based index
+
+# Wire Pulling Setup Logic
+if wire_pulling_state == "STARTING":
+    num_wires = random.randint(3, 6)
+    wire_colors = ["RED", "BLUE", "YELLOW", "WHITE", "BLACK"]
+    wire_pulling_wires = [random.choice(wire_colors) for _ in range(num_wires)]
+
+    # Determine correct wire to pull based on rules
+    # Note: Wire indices are 1-based in rules, 0-based in code.
+    if num_wires == 3:
+        if "RED" not in wire_pulling_wires:
+            wire_pulling_correct_wire_index = 1 # Second wire
+        elif wire_pulling_wires[-1] == "WHITE":
+            wire_pulling_correct_wire_index = 2 # Last wire
+        elif wire_pulling_wires.count("BLUE") > 1:
+            # Find index of last blue wire
+            wire_pulling_correct_wire_index = len(wire_pulling_wires) - 1 - wire_pulling_wires[::-1].index("BLUE")
+        else:
+            wire_pulling_correct_wire_index = 2 # Last wire
+    elif num_wires == 4:
+        if wire_pulling_wires.count("RED") > 1 and not serial_last_digit_is_even():
+            wire_pulling_correct_wire_index = len(wire_pulling_wires) - 1 - wire_pulling_wires[::-1].index("RED")
+        elif wire_pulling_wires[-1] == "YELLOW" and "RED" not in wire_pulling_wires:
+            wire_pulling_correct_wire_index = 0 # First wire
+        elif wire_pulling_wires.count("BLUE") == 1:
+            wire_pulling_correct_wire_index = 0 # First wire
+        else:
+            wire_pulling_correct_wire_index = 1 # Second wire
+    elif num_wires == 5:
+        if wire_pulling_wires[-1] == "BLACK" and not serial_last_digit_is_even():
+            wire_pulling_correct_wire_index = 3 # Fourth wire
+        elif wire_pulling_wires.count("RED") == 1 and wire_pulling_wires.count("YELLOW") > 1:
+            wire_pulling_correct_wire_index = 0 # First wire
+        elif "BLACK" not in wire_pulling_wires:
+            wire_pulling_correct_wire_index = 1 # Second wire
+        else:
+            wire_pulling_correct_wire_index = 0 # First wire
+    elif num_wires == 6:
+        if "YELLOW" not in wire_pulling_wires and not serial_last_digit_is_even():
+            wire_pulling_correct_wire_index = 2 # Third wire
+        elif wire_pulling_wires.count("YELLOW") == 1 and wire_pulling_wires.count("WHITE") > 1:
+            wire_pulling_correct_wire_index = 3 # Fourth wire
+        elif "RED" not in wire_pulling_wires:
+            wire_pulling_correct_wire_index = 5 # Last wire
+        else:
+            wire_pulling_correct_wire_index = 3 # Fourth wire
+
+    wire_pulling_state = "AWAIT_INPUT"
+    print(f"Wires: {wire_pulling_wires}")
+    print(f"Correct Wire: {wire_pulling_correct_wire_index + 1}")
+
+# Display and logging settings
+pot_check_interval = 0.2  # seconds
+last_pot_check_time = 0.0
+pot_text_label = None
+wire_text_label = None
+
+if Debug:
+    # In debug mode, the screen shows all print() statements
+    screen = displayio.CIRCUITPYTHON_TERMINAL
+else:
+    # In normal mode, show module info
+    screen = displayio.Group()
+
+    # Serial Number Label
+    serial_display_text = f"Serial {chosen_serial_index + 1}"
+    serial_label = label.Label(
+        terminalio.FONT, text=serial_display_text, color=0xFFFFFF, scale=2,
+        anchor_point=(0.0, 0.0), anchored_position=(5, 5)
+    )
+    screen.append(serial_label)
+
+    # Potentiometer Frequency Label
+    pot_text_label = label.Label(
+        terminalio.FONT, text="", color=0xFFFF00, scale=2,
+        anchor_point=(1.0, 0.0), anchored_position=(display2.width - 5, 5)
+    )
+    screen.append(pot_text_label)
+
+    # Wire Pulling Module Label
+    wire_info_text = f"{len(wire_pulling_wires)} Wires: " + " ".join(w[0] for w in wire_pulling_wires)
+    wire_text_label = label.Label(
+        terminalio.FONT, text=wire_info_text, color=0x00FFFF, scale=2,
+        anchor_point=(0.5, 1.0), anchored_position=(display2.width // 2, display2.height - 10)
+    )
+    screen.append(wire_text_label)
+
+display2.root_group = screen
 
 # Reset Neopixels
 neopixels[0] = COLORS["OFF"]
@@ -432,6 +508,28 @@ while Alive:
 
                         time.sleep(0.2)  # Debounce
                         break  # Process one button at a time
+
+    # --- MODULE: Wire Pulling ---
+    if wire_pulling_state == "AWAIT_INPUT":
+        for i, button in enumerate(wire_buttons):
+            # Only check buttons that correspond to an existing wire
+            if i < len(wire_pulling_wires) and not button.value:
+                print(f"Wire {i + 1} pulled.")
+                if i == wire_pulling_correct_wire_index:
+                    print("Correct! Wire module solved.")
+                    wire_pulling_state = "SOLVED"
+                    if wire_text_label is not None:
+                        wire_text_label.text = "Wires: SOLVED"
+                        wire_text_label.color = COLORS["GREEN"]
+                else:
+                    print("Incorrect wire! Strike. Module disabled.")
+                    strikes += 1
+                    wire_pulling_state = "FAILED"
+                    if wire_text_label is not None:
+                        wire_text_label.text = "Wires: FAILED"
+                        wire_text_label.color = COLORS["RED"]
+                time.sleep(0.2)  # Debounce
+                break
 
     # Other logic here - accelerometer updates, button presses, etc.
 
