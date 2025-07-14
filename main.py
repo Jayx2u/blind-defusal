@@ -18,11 +18,11 @@ from adafruit_adxl34x import ADXL345
 
 
 # ---------------- Game Setup ----------------
-countdown_time = 180
+countdown_time = 300
 strikes = 0
 
 # ---------------- Debug Modes ----------------
-Debug = True
+Debug = False
 IgnoreBABRule = False
 
 # ---------------- GPIO pins ----------------
@@ -124,19 +124,19 @@ big_button = DigitalInOut(BIG_BUTTON_PIN)
 big_button.direction = Direction.INPUT
 big_button.pull = Pull.UP
 
-sequence_button1 = DigitalInOut(SEQUENCER_BUTTON_PINS[0])
+sequence_button1 = DigitalInOut(SEQUENCER_BUTTON_PINS[3])
 sequence_button1.direction = Direction.INPUT
 sequence_button1.pull = Pull.UP
 
-sequence_button2 = DigitalInOut(SEQUENCER_BUTTON_PINS[1])
+sequence_button2 = DigitalInOut(SEQUENCER_BUTTON_PINS[2])
 sequence_button2.direction = Direction.INPUT
 sequence_button2.pull = Pull.UP
 
-sequence_button3 = DigitalInOut(SEQUENCER_BUTTON_PINS[2])
+sequence_button3 = DigitalInOut(SEQUENCER_BUTTON_PINS[1])
 sequence_button3.direction = Direction.INPUT
 sequence_button3.pull = Pull.UP
 
-sequence_button4 = DigitalInOut(SEQUENCER_BUTTON_PINS[3])
+sequence_button4 = DigitalInOut(SEQUENCER_BUTTON_PINS[0])
 sequence_button4.direction = Direction.INPUT
 sequence_button4.pull = Pull.UP
 
@@ -186,6 +186,7 @@ display2.root_group = screen
 
 # ---------------- Other Config ----------------
 Alive = True
+game_started = False
 game_disarmed = False
 Completed = [0, 0, 0, 0, 0]  # Tracks completion of each sequence
 
@@ -399,7 +400,10 @@ explosion_screen.append(explosion_label)
 
 
 # Serial Number Label (always on)
-serial_display_text = f"Serial {chosen_serial_index + 1}"
+serial_display_text = serial_number
+if Debug:
+    serial_display_text = f"Serial {chosen_serial_index + 1}"
+
 serial_label = label.Label(
     terminalio.FONT, text=serial_display_text, color=0xFFFFFF, scale=2,
     anchor_point=(0.0, 0.0), anchored_position=(5, 5)
@@ -413,6 +417,30 @@ battery_label = label.Label(
     anchor_point=(0.0, 0.0), anchored_position=(5, 35)
 )
 screen.append(battery_label)
+
+
+if Debug:
+    # In debug mode, we will show the terminal on the display
+    # Note: The labels added above will not be visible if the terminal takes over.
+    screen = displayio.CIRCUITPYTHON_TERMINAL
+else:
+    # In normal mode, add the other module info labels
+    # Potentiometer Frequency Label
+    pot_text_label = label.Label(
+        terminalio.FONT, text="", color=0xFFFF00, scale=2,
+        anchor_point=(1.0, 0.0), anchored_position=(display2.width - 5, 5)
+    )
+    screen.append(pot_text_label)
+
+    # Wire Pulling Module Label
+    wire_info_text = f"{len(wire_pulling_wires)} Wires: " + " ".join(w[0] for w in wire_pulling_wires)
+    wire_text_label = label.Label(
+        terminalio.FONT, text=wire_info_text, color=0x00FFFF, scale=2,
+        anchor_point=(0.5, 1.0), anchored_position=(display2.width // 2, display2.height - 10)
+    )
+    screen.append(wire_text_label)
+
+display2.root_group = screen
 
 
 if Debug:
@@ -629,30 +657,38 @@ while Alive:
         if bab_state in ["AWAIT_INPUT", "HELD"]:
             # --- Press Detection ---
             if bab_state == "AWAIT_INPUT" and not big_button.value:
-                if not all_other_modules_solved() and not IgnoreBABRule:
-                    print("FATAL: Big button pressed too early!")
-                    strikes = 99  # Immediate detonation
-                    Alive = False
-                elif bab_correct_action == "PRESS":
-                    print("Correct! BAB module solved.")
-                    bab_state = "SOLVED"
-                    game_disarmed = True
-                    display2.root_group = disarm_screen
-                else:  # Correct action was "HOLD"
-                    print("Button held. Look at the display for release time.")
-                    bab_state = "HELD"
-                    if Debug:
-                        print(f"DEBUG: Release on digit {bab_release_digit}")
-                    else:
-                        # Change display background color
-                        bg_color = COLORS.get(bab_hold_strip_color, COLORS["WHITE"])
-                        bg_bitmap = displayio.Bitmap(display2.width, display2.height, 1)
-                        bg_palette = displayio.Palette(1)
-                        bg_palette[0] = bg_color
-                        bg_sprite = displayio.TileGrid(bg_bitmap, pixel_shader=bg_palette, x=0, y=0)
-                        screen.insert(0, bg_sprite)
+                # If the game hasn't started, this first press just starts the timer.
+                if not game_started:
+                    print("Timer Started!")
+                    game_started = True
+                    last_second_tick = now  # Start the timer tick
+                    time.sleep(0.2)  # Debounce
+                # If the game has already started, this press is an attempt to solve the module.
+                else:
+                    if not all_other_modules_solved() and not IgnoreBABRule:
+                        print("FATAL: Big button pressed too early!")
+                        strikes = 99  # Immediate detonation
+                        Alive = False
+                    elif bab_correct_action == "PRESS":
+                        print("Correct! BAB module solved.")
+                        bab_state = "SOLVED"
+                        game_disarmed = True
+                        display2.root_group = disarm_screen
+                    else:  # Correct action was "HOLD"
+                        print("Button held. Look at the display for release time.")
+                        bab_state = "HELD"
+                        if Debug:
+                            print(f"DEBUG: Release on digit {bab_release_digit}")
+                        else:
+                            # Change display background color
+                            bg_color = COLORS.get(bab_hold_strip_color, COLORS["WHITE"])
+                            bg_bitmap = displayio.Bitmap(display2.width, display2.height, 1)
+                            bg_palette = displayio.Palette(1)
+                            bg_palette[0] = bg_color
+                            bg_sprite = displayio.TileGrid(bg_bitmap, pixel_shader=bg_palette, x=0, y=0)
+                            screen.insert(0, bg_sprite)
 
-                time.sleep(0.2)  # Debounce
+                    time.sleep(0.2)  # Debounce
 
             # --- Release Detection ---
             elif bab_state == "HELD" and big_button.value:
@@ -701,7 +737,7 @@ while Alive:
         display2.root_group = explosion_screen
 
     # Update timer display every second and play tick sound
-    if not game_disarmed and countdown_time > 0 and (now - last_second_tick) >= 1.0:
+    if game_started and not game_disarmed and countdown_time > 0 and (now - last_second_tick) >= 1.0:
         minutes, seconds = divmod(countdown_time, 60)
         display1.numbers(minutes, seconds, countdown_time % 2 == 0)
 
@@ -714,7 +750,7 @@ while Alive:
         countdown_time -= 1
         last_second_tick = now
 
-    elif not game_disarmed and countdown_time == 0 and (now - last_second_tick) >= 1.0:
+    elif game_started and not game_disarmed and countdown_time == 0 and (now - last_second_tick) >= 1.0:
         Alive = False
         display2.root_group = explosion_screen
 
