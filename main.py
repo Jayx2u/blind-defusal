@@ -166,33 +166,48 @@ Alive = True
 Completed = [0, 0, 0, 0, 0]  # Tracks completion of each sequence
 Debug = False
 
+# Serial Number Generation
+possible_serial_numbers = ["SN48K2", "FRQ1A3"]
+serial_number = random.choice(possible_serial_numbers)
+chosen_serial_index = possible_serial_numbers.index(serial_number)
+print(f"Serial Number: {serial_number}")
+
 # Display and logging settings
-pot_text_label = None
-pot_check_interval = 0.2 # seconds
+pot_check_interval = 0.2  # seconds
 last_pot_check_time = 0.0
+pot_text_label = None
 
 if Debug:
     # In debug mode, the screen shows all print() statements
     screen = displayio.CIRCUITPYTHON_TERMINAL
 else:
-    # In normal mode, it shows the selected frequency
+    # In normal mode, show serial and pot frequency
     screen = displayio.Group()
+
+    # Serial Number Label
+    serial_display_text = f"Serial {chosen_serial_index + 1}"
+    serial_label = label.Label(
+        terminalio.FONT,
+        text=serial_display_text,
+        color=0xFFFFFF,
+        scale=3,
+        anchor_point=(0.5, 0.0),
+        anchored_position=(display2.width // 2, 10)
+    )
+    screen.append(serial_label)
+
+    # Potentiometer Frequency Label
     pot_text_label = label.Label(
         terminalio.FONT,
         text="",
-        color=0xFFFFFF,
-        scale=3
+        color=0xFFFF00,
+        scale=3,
+        anchor_point=(0.5, 1.0),
+        anchored_position=(display2.width // 2, display2.height - 10)
     )
-    pot_text_label.x = 10
-    pot_text_label.y = 150
     screen.append(pot_text_label)
 
 display2.root_group = screen
-
-# Serial Number Generation
-possible_serial_numbers = ["SN48K2", "FRQ1A3"]
-serial_number = random.choice(possible_serial_numbers)
-print(f"Serial Number: {serial_number}")
 
 # Sounds
 tick_sound = audiocore.WaveFile(open("/assets/tick.wav", "rb"))
