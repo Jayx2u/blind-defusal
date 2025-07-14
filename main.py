@@ -21,6 +21,10 @@ from adafruit_adxl34x import ADXL345
 countdown_time = 180
 strikes = 0
 
+# ---------------- Debug Modes ----------------
+Debug = True
+IgnoreBABRule = False
+
 # ---------------- GPIO pins ----------------
 
 # Display
@@ -94,8 +98,7 @@ def serial_last_digit_is_even():
 def all_other_modules_solved():
     """Checks if all non-needy, non-BAB modules are solved."""
     return (morse_state == "SOLVED" and
-            sequencer_state == "SOLVED" and
-            wire_pulling_state in ["SOLVED", "FAILED"])
+            sequencer_state == "SOLVED")
 
 # ---------------- Peripherals ----------------
 
@@ -143,7 +146,7 @@ transmit_button.direction = Direction.INPUT
 transmit_button.pull = Pull.UP
 
 # Neopixels
-neopixels = neopixel.NeoPixel(NEOPIXEL_PIN, 6, brightness=0.5)
+neopixels = neopixel.NeoPixel(NEOPIXEL_PIN, 5, brightness=0.2)
 
 # BAB LED
 big_button_led = DigitalInOut(BIG_BUTTON_LED_PIN)
@@ -170,7 +173,8 @@ display_bus = FourWire(spi,
 )
 
 display2 = ST7789(display_bus,
-    width=240, height=320,
+    width=320, height=240,
+    rotation=90,
     rowstart=0, colstart=0,
     bgr=True, invert=False
 )
@@ -182,8 +186,8 @@ display2.root_group = screen
 
 # ---------------- Other Config ----------------
 Alive = True
+game_disarmed = False
 Completed = [0, 0, 0, 0, 0]  # Tracks completion of each sequence
-Debug = True
 
 # --- IDENTIFICATION: Serial Number ---
 possible_serial_numbers = ["SN48K2", "FRQ1A3"]
@@ -253,7 +257,7 @@ morse_word_to_send = ""
 morse_char_index = 0
 morse_signal_index = 0
 morse_last_time = 0.0
-morse_time_unit = 0.25 # seconds for one dot
+morse_time_unit = 0.5 # seconds for one dot
 
 # Power Sequencer Module State
 sequencer_state = "IDLE"  # IDLE, STARTING, SHOW_SEQUENCE, AWAIT_INPUT, SOLVED
@@ -376,6 +380,23 @@ wire_text_label = None
 
 # Create the display group first
 screen = displayio.Group()
+
+# Disarmed Display Group
+disarm_screen = displayio.Group()
+disarm_label = label.Label(
+    terminalio.FONT, text="DISARMED", color=COLORS["GREEN"], scale=5,
+    anchor_point=(0.5, 0.5), anchored_position=(display2.width // 2, display2.height // 2)
+)
+disarm_screen.append(disarm_label)
+
+# Explosion Display Group
+explosion_screen = displayio.Group()
+explosion_label = label.Label(
+    terminalio.FONT, text="YOU DIE :c", color=COLORS["RED"], scale=5,
+    anchor_point=(0.5, 0.5), anchored_position=(display2.width // 2, display2.height // 2)
+)
+explosion_screen.append(explosion_label)
+
 
 # Serial Number Label (always on)
 serial_display_text = f"Serial {chosen_serial_index + 1}"
@@ -603,23 +624,26 @@ while Alive:
                 time.sleep(0.2)  # Debounce
                 break
 
-    # --- MODULE: Big Ass Button ---
+        # --- MODULE: Big Ass Button ---
 
-    if bab_state in ["AWAIT_INPUT", "HELD"]:
+        if bab_state in ["AWAIT_INPUT", "HELD"]:
             # --- Press Detection ---
             if bab_state == "AWAIT_INPUT" and not big_button.value:
-                if not all_other_modules_solved():
+                if not all_other_modules_solved() and not IgnoreBABRule:
                     print("FATAL: Big button pressed too early!")
                     strikes = 99  # Immediate detonation
                     Alive = False
                 elif bab_correct_action == "PRESS":
                     print("Correct! BAB module solved.")
                     bab_state = "SOLVED"
-                    # You might want a visual indicator for solved here
+                    game_disarmed = True
+                    display2.root_group = disarm_screen
                 else:  # Correct action was "HOLD"
                     print("Button held. Look at the display for release time.")
                     bab_state = "HELD"
-                    if not Debug:
+                    if Debug:
+                        print(f"DEBUG: Release on digit {bab_release_digit}")
+                    else:
                         # Change display background color
                         bg_color = COLORS.get(bab_hold_strip_color, COLORS["WHITE"])
                         bg_bitmap = displayio.Bitmap(display2.width, display2.height, 1)
@@ -632,17 +656,25 @@ while Alive:
 
             # --- Release Detection ---
             elif bab_state == "HELD" and big_button.value:
-                timer_str = str(countdown_time)
-                if str(bab_release_digit) in timer_str:
-                    print(f"Correct release at {countdown_time}s! BAB module solved.")
-                    bab_state = "SOLVED"
-                else:
-                    print(f"Incorrect release at {countdown_time}s! Strike.")
-                    strikes += 1
+                # The time the user saw on the display before releasing.
+                # We add 1 because countdown_time was already decremented for the next tick.
+                time_on_display = countdown_time + 1
+                minutes, seconds = divmod(time_on_display, 60)
+                time_str_on_display = f"{minutes:02d}{seconds:02d}"
 
-                # Revert display background
-                if not Debug and len(screen) > 3:  # Check if bg is present
-                    screen.pop(0)
+                if str(bab_release_digit) in time_str_on_display:
+                    print(f"Correct release at {minutes:02d}:{seconds:02d}! BOMB DISARMED.")
+                    bab_state = "SOLVED"
+                    game_disarmed = True
+                    display2.root_group = disarm_screen
+
+                else:
+                    minutes, seconds = divmod(time_on_display, 60)
+                    print(f"Incorrect release at {minutes:02d}:{seconds:02d}! Strike.")
+                    strikes += 1
+                    # Revert display background
+                    if not Debug and len(screen) > 3:  # Check if bg is present
+                        screen.pop(0)
 
     # Other logic here - accelerometer updates, button presses, etc.
 
@@ -658,8 +690,18 @@ while Alive:
             last_pot_value = current_pot_value
         last_pot_check_time = now
 
+    # --- Strike Indicator Lights ---
+    if strikes >= 1:
+        neopixels[2] = COLORS["RED"]
+    if strikes >= 2:
+        neopixels[3] = COLORS["RED"]
+    if strikes >= 3:
+        neopixels[4] = COLORS["RED"]
+        Alive = False
+        display2.root_group = explosion_screen
+
     # Update timer display every second and play tick sound
-    if countdown_time > 0 and (now - last_second_tick) >= 1.0:
+    if not game_disarmed and countdown_time > 0 and (now - last_second_tick) >= 1.0:
         minutes, seconds = divmod(countdown_time, 60)
         display1.numbers(minutes, seconds, countdown_time % 2 == 0)
 
@@ -672,8 +714,10 @@ while Alive:
         countdown_time -= 1
         last_second_tick = now
 
-    elif countdown_time == 0 and (now - last_second_tick) >= 1.0:
+    elif not game_disarmed and countdown_time == 0 and (now - last_second_tick) >= 1.0:
         Alive = False
+        display2.root_group = explosion_screen
+
 
 
 display1.numbers(00000, False)
