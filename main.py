@@ -433,12 +433,20 @@ else:
     screen.append(pot_text_label)
 
     # Wire Pulling Module Label
-    wire_info_text = f"{len(wire_pulling_wires)} Wires: " + " ".join(w[0] for w in wire_pulling_wires)
-    wire_text_label = label.Label(
-        terminalio.FONT, text=wire_info_text, color=0x00FFFF, scale=2,
+    # wire_info_text = f"{len(wire_pulling_wires)} Wires: " + " ".join(w[0] for w in wire_pulling_wires)
+    # wire_text_label = label.Label(
+    #     terminalio.FONT, text=wire_info_text, color=0x00FFFF, scale=2,
+    #     anchor_point=(0.5, 1.0), anchored_position=(display2.width // 2, display2.height - 10)
+    # )
+    #screen.append(wire_text_label)
+
+    # Logo Label
+    logo_info_text = "Blind Defusal"
+    logo_text_label = label.Label(
+        terminalio.FONT, text=logo_info_text, color=0x00FFFF, scale=2,
         anchor_point=(0.5, 1.0), anchored_position=(display2.width // 2, display2.height - 10)
     )
-    screen.append(wire_text_label)
+    screen.append(logo_text_label)
 
 display2.root_group = screen
 
@@ -457,12 +465,12 @@ else:
     screen.append(pot_text_label)
 
     # Wire Pulling Module Label
-    wire_info_text = f"{len(wire_pulling_wires)} Wires: " + " ".join(w[0] for w in wire_pulling_wires)
-    wire_text_label = label.Label(
-        terminalio.FONT, text=wire_info_text, color=0x00FFFF, scale=2,
-        anchor_point=(0.5, 1.0), anchored_position=(display2.width // 2, display2.height - 10)
-    )
-    screen.append(wire_text_label)
+    # wire_info_text = f"{len(wire_pulling_wires)} Wires: " + " ".join(w[0] for w in wire_pulling_wires)
+    # wire_text_label = label.Label(
+    #     terminalio.FONT, text=wire_info_text, color=0x00FFFF, scale=2,
+    #     anchor_point=(0.5, 1.0), anchored_position=(display2.width // 2, display2.height - 10)
+    # )
+    # screen.append(wire_text_label)
 
 display2.root_group = screen
 
