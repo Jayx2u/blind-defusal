@@ -9,6 +9,10 @@ Heavily inspired by the video game "Keep Talking and Nobody Explodes," this is a
 
 You either win by disarming the bomb by completing all the modules or losing by getting three strikes or making a fatal mistake - instantly detonating the bomb.
 
+## Showcase
+### Photos
+### Video Demo
+
 <hr>
 
 Made with ❤️ by [@ConfusedHello](https://github.com/confusedhello), [@Jayx2u](https://github.com/Jayx2u/) and [@pi-nf](https://github.com/pi-nf) during [Undercity 2025 @ GitHub HQ](https://highway.hackclub.com/getting-started/undercity).
