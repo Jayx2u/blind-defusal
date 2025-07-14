@@ -100,7 +100,7 @@ export default function Home() {
           </h2>
           <div className="space-y-4 text-lg">
             <p>
-              The bomb&apos;s amount of batteries is crucial for disarming certain modules. It can be found on bomb's display located in the middle.
+              The bomb&apos;s amount of batteries is crucial for disarming certain modules. It can be found on bomb&apos;s display located in the middle.
             </p>
             <div className="p-4 border-2 border-gray-400 rounded-lg bg-white">
               <h3 className="text-xl font-bold mb-2">Serial Number Format</h3>
