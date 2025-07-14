@@ -148,6 +148,30 @@ display2.root_group = screen
 # ---------------- Other Config ----------------
 Alive = True
 Completed = [0, 0, 0, 0, 0]  # Tracks completion of each sequence
+Debug = False
+
+# Display and logging settings
+pot_text_label = None
+pot_check_interval = 0.2 # seconds
+last_pot_check_time = 0.0
+
+if Debug:
+    # In debug mode, the screen shows all print() statements
+    screen = displayio.CIRCUITPYTHON_TERMINAL
+else:
+    # In normal mode, it shows the selected frequency
+    screen = displayio.Group()
+    pot_text_label = label.Label(
+        terminalio.FONT,
+        text="",
+        color=0xFFFFFF,
+        scale=3
+    )
+    pot_text_label.x = 10
+    pot_text_label.y = 150
+    screen.append(pot_text_label)
+
+display2.root_group = screen
 
 COLORS = {
     "RED": (255, 0, 0),
@@ -295,13 +319,19 @@ while Alive:
                 morse_state = "SIGNAL_GAP"
                 morse_last_time = now
 
-    # --- Potentiometer Value Change ---
-    current_pot_value = potentiometer.snapped_value
-    if current_pot_value != last_pot_value:
-        print(f"Potentiometer: {current_pot_value / 1000.0} MHz")
-        last_pot_value = current_pot_value
-
     # Other logic here - accelerometer updates, button presses, etc.
+
+    # --- Potentiometer Value Change ---
+    if (now - last_pot_check_time) >= pot_check_interval:
+        current_pot_value = potentiometer.snapped_value
+        if current_pot_value != last_pot_value:
+            formatted_freq = f"{current_pot_value / 1000.0} MHz"
+            if Debug:
+                print(f"Pot: {formatted_freq}")
+            elif pot_text_label is not None:
+                pot_text_label.text = formatted_freq
+            last_pot_value = current_pot_value
+        last_pot_check_time = now
 
     # Update timer display every second and play tick sound
     if countdown_time > 0 and (now - last_second_tick) >= 1.0:
