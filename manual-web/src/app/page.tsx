@@ -235,6 +235,10 @@ export default function Home() {
             Module: Wire Pulling
           </h2>
           <div className="space-y-4">
+            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4" role="alert">
+              <p className="font-bold">You only have one chance to successfully disarm this module.</p>
+              <p>If you fail, you will not be able to try again.</p>
+            </div>
             <p>
               This module presents 3 to 6 colored wires running vertically. To disarm it, one specific wire must be carefully pulled from its socket. Pulling the wrong wire will cause a strike. The wires must not be cut.
             </p>
