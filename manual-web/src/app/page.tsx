@@ -79,7 +79,7 @@ export default function Home() {
           </h2>
           <div className="space-y-4 text-lg">
             <p>
-              The bomb&apos;s serial number is crucial for disarming certain modules. It can be found on the side of the bomb casing.
+              The bomb&apos;s serial number is crucial for disarming certain modules. It can be found on the bottom of the bomb casing.
             </p>
             <div className="p-4 border-2 border-gray-400 rounded-lg bg-white">
               <h3 className="text-xl font-bold mb-2">Serial Number Format</h3>
@@ -88,6 +88,24 @@ export default function Home() {
               </p>
               <p className="mt-2">
                 Pay close attention to specific digits or letters when requested by a module&apos;s instructions, especially whether a digit is <span className="font-bold">odd or even</span>.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Identification: Batteries Section */}
+        <section id="serial-number">
+          <h2 className="text-3xl font-bold border-b-4 border-gray-700 pb-2 mb-4">
+            Identification: Batteries
+          </h2>
+          <div className="space-y-4 text-lg">
+            <p>
+              The bomb&apos;s amount of batteries is crucial for disarming certain modules. It can be found on bomb's display located in the middle.
+            </p>
+            <div className="p-4 border-2 border-gray-400 rounded-lg bg-white">
+              <h3 className="text-xl font-bold mb-2">Serial Number Format</h3>
+              <p>
+                The amount of batteries can have a range from 1 to 4. For example: <span className="font-bold p-1 bg-gray-200 rounded">3 BATTERIES</span>.
               </p>
             </div>
           </div>
