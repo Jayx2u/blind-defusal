@@ -19,6 +19,7 @@ from adafruit_adxl34x import ADXL345
 
 # ---------------- Game Setup ----------------
 countdown_time = 180
+strikes = 0
 
 # ---------------- GPIO pins ----------------
 DISPLAY2_SCK_PIN = board.GP2
@@ -29,7 +30,6 @@ DISPLAY2_RST_PIN = board.GP6
 DISPLAY2_DC_PIN = board.GP7
 
 BIG_BUTTON_PIN = board.GP8
-POTENTIOMETER_BUTTON_PIN = board.GP9
 
 ACCELEROMETER_SDA_PIN = board.GP12
 ACCELEROMETER_SCL_PIN = board.GP13
@@ -50,6 +50,8 @@ TRANSMIT_BUTTON_PIN = board.GP10
 
 
 # ---------------- Helper Classes ----------------
+last_pot_value = 0 # Last potentiometer value
+
 class Potentiometer:
     def __init__(self, pin):
         self.adc = AnalogIn(pin)
@@ -88,10 +90,6 @@ big_button = DigitalInOut(BIG_BUTTON_PIN)
 big_button.direction = Direction.INPUT
 big_button.pull = Pull.UP
 
-potentiometer_button = DigitalInOut(POTENTIOMETER_BUTTON_PIN)
-potentiometer_button.direction = Direction.INPUT
-potentiometer_button.pull = Pull.UP
-
 sequence_button1 = DigitalInOut(SEQUENCER_BUTTON_PINS[0])
 sequence_button1.direction = Direction.INPUT
 sequence_button1.pull = Pull.UP
@@ -114,7 +112,7 @@ transmit_button.direction = Direction.INPUT
 transmit_button.pull = Pull.UP
 
 # Neopixels
-neopixels = neopixel.NeoPixel(NEOPIXEL_PIN, 6, brightness=2)
+neopixels = neopixel.NeoPixel(NEOPIXEL_PIN, 6, brightness=0.5)
 
 # TFT Display
 displayio.release_displays()
@@ -142,7 +140,8 @@ display2 = ST7789(display_bus,
     bgr=True, invert=False
 )
 
-screen = displayio.Group()
+# screen = displayio.Group()
+screen = displayio.CIRCUITPYTHON_TERMINAL # For Debugging
 display2.root_group = screen
 
 
@@ -186,6 +185,14 @@ MORSE_CODE = { 'A':'.-', 'B':'-...', 'C':'-.-.', 'D':'-..', 'E':'.',
 MORSE_WORDS = ["SHELL", "HALLS", "SLICK", "TRICK", "BOXES", "LEAKS", "STROBE",
                "BISTRO", "FLICK", "BOMBS", "BREAK", "BRICK", "STEAK", "STING",
                "VECTOR", "BEATS"]
+MORSE_FREQUENCIES = {
+    "SHELL": 3505, "HALLS": 3515, "SLICK": 3522, "TRICK": 3532,
+    "BOXES": 3535, "LEAKS": 3542, "STROBE": 3545, "BISTRO": 3552,
+    "FLICK": 3555, "BOMBS": 3565, "BREAK": 3572, "BRICK": 3575,
+    "STEAK": 3582, "STING": 3592, "VECTOR": 3595, "BEATS": 3600
+}
+
+morse_correct_frequency = 0
 
 # Morse Code Module State
 morse_state = "IDLE"
@@ -195,60 +202,63 @@ morse_signal_index = 0
 morse_last_time = 0.0
 morse_time_unit = 0.25 # seconds for one dot
 
+# Reset Neopixels
+neopixels[0] = COLORS["OFF"]
+
 # ---------------- Main Loop ----------------
 while Alive:
     now = time.monotonic()
 
     # --- MODULE: Morse Code ---
-    # The potentiometer is not used in this implementation but its value can be read via:
-    # potentiometer.snapped_value or potentiometer.value
+    # Pressing the transmit button starts the sequence.
+    # Once started, the morse code will loop.
+    # The user must set the potentiometer to the correct frequency and press the button again to solve.
 
-    # Pressing the transmit button starts or restarts the sequence for a new word
-    if not transmit_button.value:
-        # Only trigger on a new press
-        if morse_state == "IDLE":
-            # Select a random word from the list.
-            if MORSE_WORDS:
-                morse_word_to_send = random.choice(MORSE_WORDS)
-                print(f"Morse word to transmit: {morse_word_to_send}")
+    # State transition: IDLE -> TRANSMITTING
+    if not transmit_button.value and morse_state == "IDLE":
+        if MORSE_WORDS:
+            morse_word_to_send = random.choice(MORSE_WORDS)
+            morse_correct_frequency = MORSE_FREQUENCIES[morse_word_to_send]
+            print(f"Word: {morse_word_to_send}\nFreq: {morse_correct_frequency / 1000.0} MHz")
 
-                # Clear previous text and display the new word
-                while len(screen) > 0:
-                    screen.pop()
-                text_area = label.Label(
-                    terminalio.FONT,
-                    text=morse_word_to_send,
-                    color=0xFFFFFF,
-                    scale=3
-                )
-                text_area.x = display2.width // 2 - text_area.bounding_box[2] // 2
-                text_area.y = display2.height // 2
-                screen.append(text_area)
+            morse_state = "START_SEQUENCE"
+            morse_char_index = 0
+            morse_signal_index = 0
+            morse_last_time = now
+            time.sleep(0.2)  # Debounce
 
-                morse_state = "START_SEQUENCE"
-                morse_char_index = 0
-                morse_signal_index = 0
-                morse_last_time = now
+    # State transition: TRANSMITTING -> check answer
+    elif not transmit_button.value and morse_state not in ["IDLE", "SOLVED"]:
+        selected_freq = potentiometer.snapped_value
+        print(f"Submitted: {selected_freq / 1000.0} MHz")
+        if selected_freq == morse_correct_frequency:
+            morse_state = "SOLVED"
+            neopixels[0] = COLORS["GREEN"]
+            print("Correct! Module solved.")
+        else:
+            strikes += 1
+            print(f"Incorrect. Strikes: {strikes}")
+        time.sleep(0.2)  # Debounce
 
-    if morse_state != "IDLE":
-        # If button is released, allow re-triggering
-        if transmit_button.value and morse_state == "START_SEQUENCE" and (now - morse_last_time) < 0.1:
-            pass  # Debounce/wait for release
-
+    # Morse code state machine
+    if morse_state not in ["IDLE", "SOLVED"]:
         if morse_state == "START_SEQUENCE":
             neopixels[0] = COLORS["BLUE"]
-            if (now - morse_last_time) >= 1.0:  # Blue light for 1 second
+            if (now - morse_last_time) >= 1.0:
                 neopixels[0] = COLORS["OFF"]
-                morse_state = "LETTER_GAP"  # Start with a gap before the first letter
+                morse_state = "LETTER_GAP"
                 morse_last_time = now
 
         elif morse_state == "LETTER_GAP":
-            if (now - morse_last_time) >= (3 * morse_time_unit):
+            # Word gap is 7 units, letter gap is 3.
+            # The first gap is always a word gap.
+            gap_duration = 7 * morse_time_unit if morse_char_index == 0 else 3 * morse_time_unit
+            if (now - morse_last_time) >= gap_duration:
                 if morse_char_index >= len(morse_word_to_send):
-                    morse_state = "IDLE"  # Word finished
-                    # Clear the text from the screen
-                    while len(screen) > 0:
-                        screen.pop()
+                    # Loop the word by going back to the start sequence
+                    morse_char_index = 0
+                    morse_signal_index = 0
+                    morse_state = "START_SEQUENCE"
                 else:
                     morse_state = "SIGNAL"
                     morse_signal_index = 0
@@ -262,20 +272,13 @@ while Alive:
 
         elif morse_state == "SIGNAL":
             char = morse_word_to_send[morse_char_index]
-            if char not in MORSE_CODE:  # Skip unknown characters
+            morse_pattern = MORSE_CODE[char]
+            if morse_signal_index >= len(morse_pattern):
                 morse_char_index += 1
                 morse_state = "LETTER_GAP"
             else:
-                morse_pattern = MORSE_CODE[char]
-                if morse_signal_index >= len(morse_pattern):
-                    morse_char_index += 1
-                    morse_state = "LETTER_GAP"
-                else:
-                    signal = morse_pattern[morse_signal_index]
-                    if signal == '.':
-                        morse_state = "DOT"
-                    else:  # signal == '-'
-                        morse_state = "DASH"
+                signal = morse_pattern[morse_signal_index]
+                morse_state = "DOT" if signal == '.' else "DASH"
             morse_last_time = now
 
         elif morse_state == "DOT":
@@ -291,6 +294,12 @@ while Alive:
                 neopixels[0] = COLORS["OFF"]
                 morse_state = "SIGNAL_GAP"
                 morse_last_time = now
+
+    # --- Potentiometer Value Change ---
+    current_pot_value = potentiometer.snapped_value
+    if current_pot_value != last_pot_value:
+        print(f"Potentiometer: {current_pot_value / 1000.0} MHz")
+        last_pot_value = current_pot_value
 
     # Other logic here - accelerometer updates, button presses, etc.
 
