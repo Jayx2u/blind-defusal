@@ -1,8 +1,12 @@
 import time
 import board
+import random
 import neopixel
 import audiocore
 import audiobusio, displayio, busio
+
+from adafruit_display_text import label
+import terminalio
 
 from analogio import AnalogIn
 from fourwire import FourWire
@@ -42,6 +46,7 @@ DISPLAY1_DIO_PIN = board.GP26
 DISPLAY1_CLK_PIN = board.GP27
 
 POTENTIOMETER_PIN = board.GP28
+TRANSMIT_BUTTON_PIN = board.GP10
 
 
 # ---------------- Helper Classes ----------------
@@ -102,6 +107,11 @@ sequence_button3.pull = Pull.UP
 sequence_button4 = DigitalInOut(SEQUENCER_BUTTON_PINS[3])
 sequence_button4.direction = Direction.INPUT
 sequence_button4.pull = Pull.UP
+
+# Transmit Button (Morse Code Module)
+transmit_button = DigitalInOut(TRANSMIT_BUTTON_PIN)
+transmit_button.direction = Direction.INPUT
+transmit_button.pull = Pull.UP
 
 # Neopixels
 neopixels = neopixel.NeoPixel(NEOPIXEL_PIN, 6, brightness=2)
@@ -164,11 +174,123 @@ color_sequences = [
 
 last_second_tick = 0.0
 last_accel_update = 0.0
+last_acceleration = None
+STRIKE_THRESHOLD = 15.0 # m/s^2, gravity is ~9.8. Adjust for sensitivity.
 
+MORSE_CODE = { 'A':'.-', 'B':'-...', 'C':'-.-.', 'D':'-..', 'E':'.',
+               'F':'..-.', 'G':'--.', 'H':'....', 'I':'..', 'J':'.---',
+               'K':'-.-', 'L':'.-..', 'M':'--', 'N':'-.', 'O':'---',
+               'P':'.--.', 'Q':'--.-', 'R':'.-.', 'S':'...', 'T':'-',
+               'U':'..-', 'V':'...-', 'W':'.--', 'X':'-..-', 'Y':'-.--',
+               'Z':'--..'}
+MORSE_WORDS = ["SHELL", "HALLS", "SLICK", "TRICK", "BOXES", "LEAKS", "STROBE",
+               "BISTRO", "FLICK", "BOMBS", "BREAK", "BRICK", "STEAK", "STING",
+               "VECTOR", "BEATS"]
+
+# Morse Code Module State
+morse_state = "IDLE"
+morse_word_to_send = ""
+morse_char_index = 0
+morse_signal_index = 0
+morse_last_time = 0.0
+morse_time_unit = 0.25 # seconds for one dot
 
 # ---------------- Main Loop ----------------
 while Alive:
     now = time.monotonic()
+
+    # --- MODULE: Morse Code ---
+    # The potentiometer is not used in this implementation but its value can be read via:
+    # potentiometer.snapped_value or potentiometer.value
+
+    # Pressing the transmit button starts or restarts the sequence for a new word
+    if not transmit_button.value:
+        # Only trigger on a new press
+        if morse_state == "IDLE":
+            # Select a random word from the list.
+            if MORSE_WORDS:
+                morse_word_to_send = random.choice(MORSE_WORDS)
+                print(f"Morse word to transmit: {morse_word_to_send}")
+
+                # Clear previous text and display the new word
+                while len(screen) > 0:
+                    screen.pop()
+                text_area = label.Label(
+                    terminalio.FONT,
+                    text=morse_word_to_send,
+                    color=0xFFFFFF,
+                    scale=3
+                )
+                text_area.x = display2.width // 2 - text_area.bounding_box[2] // 2
+                text_area.y = display2.height // 2
+                screen.append(text_area)
+
+                morse_state = "START_SEQUENCE"
+                morse_char_index = 0
+                morse_signal_index = 0
+                morse_last_time = now
+
+    if morse_state != "IDLE":
+        # If button is released, allow re-triggering
+        if transmit_button.value and morse_state == "START_SEQUENCE" and (now - morse_last_time) < 0.1:
+            pass  # Debounce/wait for release
+
+        if morse_state == "START_SEQUENCE":
+            neopixels[0] = COLORS["BLUE"]
+            if (now - morse_last_time) >= 1.0:  # Blue light for 1 second
+                neopixels[0] = COLORS["OFF"]
+                morse_state = "LETTER_GAP"  # Start with a gap before the first letter
+                morse_last_time = now
+
+        elif morse_state == "LETTER_GAP":
+            if (now - morse_last_time) >= (3 * morse_time_unit):
+                if morse_char_index >= len(morse_word_to_send):
+                    morse_state = "IDLE"  # Word finished
+                    # Clear the text from the screen
+                    while len(screen) > 0:
+                        screen.pop()
+                else:
+                    morse_state = "SIGNAL"
+                    morse_signal_index = 0
+                morse_last_time = now
+
+        elif morse_state == "SIGNAL_GAP":
+            if (now - morse_last_time) >= morse_time_unit:
+                morse_signal_index += 1
+                morse_state = "SIGNAL"
+                morse_last_time = now
+
+        elif morse_state == "SIGNAL":
+            char = morse_word_to_send[morse_char_index]
+            if char not in MORSE_CODE:  # Skip unknown characters
+                morse_char_index += 1
+                morse_state = "LETTER_GAP"
+            else:
+                morse_pattern = MORSE_CODE[char]
+                if morse_signal_index >= len(morse_pattern):
+                    morse_char_index += 1
+                    morse_state = "LETTER_GAP"
+                else:
+                    signal = morse_pattern[morse_signal_index]
+                    if signal == '.':
+                        morse_state = "DOT"
+                    else:  # signal == '-'
+                        morse_state = "DASH"
+            morse_last_time = now
+
+        elif morse_state == "DOT":
+            neopixels[0] = COLORS["WHITE"]
+            if (now - morse_last_time) >= morse_time_unit:
+                neopixels[0] = COLORS["OFF"]
+                morse_state = "SIGNAL_GAP"
+                morse_last_time = now
+
+        elif morse_state == "DASH":
+            neopixels[0] = COLORS["WHITE"]
+            if (now - morse_last_time) >= (3 * morse_time_unit):
+                neopixels[0] = COLORS["OFF"]
+                morse_state = "SIGNAL_GAP"
+                morse_last_time = now
 
     # Other logic here - accelerometer updates, button presses, etc.
 
