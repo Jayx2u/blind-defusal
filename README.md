@@ -13,8 +13,8 @@ You either win by disarming the bomb by completing all the modules or losing by 
 ### Photo of the Hardware
 ![Photo](https://github.com/Jayx2u/blind-defusal/blob/main/assets/photo.JPG?raw=true)
 ![Underside Photo](https://github.com/Jayx2u/blind-defusal/blob/main/assets/underside.jpeg?raw=true)
-### Video Showcase
-https://youtu.be/j12eWboH9sA
+### Video Demo
+https://youtu.be/bV7hxyeNTcI
 
 <hr>
 
