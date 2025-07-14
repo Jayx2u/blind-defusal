@@ -116,7 +116,7 @@ export default function Home() {
           </h2>
           <div className="space-y-4">
             <p>
-              This module has four colored LEDs and four corresponding buttons. The LEDs will flash in a sequence. The start of the sequence is indicated by the LED being white. The Operator must describe the color sequence, and the Expert will provide the correct button press sequence, which may depend on the bomb&apos;s serial number.
+              This module has one colored LED and four corresponding buttons. The LEDs will flash in a sequence. The start of the sequence is indicated by the LED being white. The Operator must describe the color sequence, and the Expert will provide the correct button press sequence, which may depend on the bomb&apos;s serial number.
             </p>
             <div className="p-4 border-2 border-gray-400 rounded-lg bg-white">
               <h3 className="text-xl font-bold mb-2">Conditional Sequences:</h3>
