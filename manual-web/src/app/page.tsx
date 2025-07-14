@@ -134,7 +134,7 @@ export default function Home() {
           </h2>
           <div className="space-y-4">
             <p>
-              This module has one colored LED and four corresponding buttons. The LEDs will flash in a sequence. The start of the sequence is indicated by the LED being white. The Operator must describe the color sequence, and the Expert will provide the correct button press sequence, which may depend on the bomb&apos;s serial number.
+              This module has one colored LED and four corresponding buttons. The LEDs will flash in a sequence. The start of the sequence is indicated by the LED being white. To start the sequence, the Operator needs to press the FIRST button located on the module. The Operator must describe the color sequence, and the Expert will provide the correct button press sequence, which may depend on the bomb&apos;s serial number.
             </p>
             <div className="p-4 border-2 border-gray-400 rounded-lg bg-white">
               <h3 className="text-xl font-bold mb-2">Conditional Sequences:</h3>
@@ -198,7 +198,7 @@ export default function Home() {
           </h2>
           <div className="space-y-4">
             <p>
-              This module has a flashing LED, a sliding potentiometer, and a transmit button. The LED flashes a single word from the list below in Morse code. The start of the sequence is indicated by the LED being blue. The Operator must interpret the code, and the Expert must provide the correct frequency to set with the potentiometer.
+              This module has a flashing LED, a sliding potentiometer, and a transmit button. The LED flashes a single word from the list below in Morse code. The start of the sequence is indicated by the LED being blue. To start the sequence, the Operator needs to press the transmit button located on the module. The Operator must interpret the code, and the Expert must provide the correct frequency to set with the potentiometer.
             </p>
             <div className="p-4 border-2 border-gray-400 rounded-lg bg-white space-y-6">
               <div>
