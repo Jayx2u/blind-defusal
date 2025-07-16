@@ -1,6 +1,9 @@
-![Banner](https://github.com/Jayx2u/blind-defusal/blob/main/assets/blind-defusal-banner.png?raw=true)
-# Blind Defusal
-Heavily inspired by the video game "Keep Talking and Nobody Explodes," this is a two-player, cooperative "bomb defusal" game. One player is the `Operator` who has the physical device, and the other is the `Expert` who has the instruction manual but cannot see the device. Their goal is to disarm all the modules on the device before the timer runs out.
+![Banner](https://github.com/Jayx2u/blind-defusal/blob/main/assets/banner.png?raw=true)
+
+
+# Blind Defusal - The Game
+A two-player, cooperative "bomb defusal" game heavily inspired by "Keep Talking and Nobody Explodes"! One player is the `Operator` who has the physical device, and the other is the `Expert` who has the instruction manual but cannot see the device. Their goal is to disarm all the modules on the device before the timer runs out.
+
 
 ## How to Play
 1. A person picks `Operator` and the other person picks the `Expert.` The `Operator` gets the bomb whilst the `Expert` gets the [manual](https://blind-defusal.jayx2u.fyi/). **Players are not allowed to look at each other's materials.**
@@ -9,13 +12,18 @@ Heavily inspired by the video game "Keep Talking and Nobody Explodes," this is a
 
 You either win by disarming the bomb by completing all the modules or losing by getting three strikes or making a fatal mistake - instantly detonating the bomb.
 
+
 ## Showcase
-### Photo of the Hardware
+### Photos of the Hardware
 ![Photo](https://github.com/Jayx2u/blind-defusal/blob/main/assets/photo.png?raw=true)
 ![Underside Photo](https://github.com/Jayx2u/blind-defusal/blob/main/assets/underside.jpeg?raw=true)
+![Digram](https://github.com/Jayx2u/blind-defusal/blob/main/assets/proccessFlowDiagram.png?raw=true)
+
+
 ### Video Demo
-https://youtu.be/bV7hxyeNTcI
+Video demo by [@Jayx2u](https://github.com/jayx2u) and [@pi-nf](https://github.com/pi-nf) available [here](https://youtu.be/9AXnuKD_J24)!
+
 
 <hr>
 
-Made with ❤️ by [@ConfusedHello](https://github.com/confusedhello), [@Jayx2u](https://github.com/Jayx2u/) and [@pi-nf](https://github.com/pi-nf) during [Undercity 2025 @ GitHub HQ](https://highway.hackclub.com/getting-started/undercity).
+Made with ❤️ by [@ConfusedHello](https://github.com/confusedhello), [@Jayx2u](https://github.com/Jayx2u/) and [@pi-nf](https://github.com/pi-nf) during [Hack Club x Github Undercity 2025 @ GitHub HQ](https://highway.hackclub.com/getting-started/undercity).
