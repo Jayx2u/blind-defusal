@@ -21,7 +21,7 @@ You either win by disarming the bomb by completing all the modules or losing by 
 
 
 ### Video Demo
-Video demo by [@Jayx2u](https://github.com/jayx2u) and [@pi-nf](https://github.com/pi-nf) available [here](https://youtu.be/9AXnuKD_J24)!
+Video demo by [@Jayx2u](https://github.com/jayx2u) and [@pi-nf](https://github.com/pi-nf) available [here](https://youtu.be/Vhgq65tojBY)!
 
 
 <hr>
